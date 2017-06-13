@@ -2,7 +2,7 @@
 
 This app is used to view wind turbine planning applications within the UK.
 
-![Dashboard Layout][https://github.com/mikey-harper/ShinyApps/blob/master/WindTurbineMapUK/Dashboard.JPG?raw=true]
+![Dashboard Layout](https://github.com/mikey-harper/ShinyApps/blob/master/WindTurbineMapUK/Dashboard.JPG?raw=true)
 
 # Features
 
