@@ -1,0 +1,121 @@
+---
+title: "Turbine Information Report: `r params$n`"
+author: "https://mikeyharper.shinyapps.io/windturbinemap/"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: 
+  pdf_document:
+    fig_caption: true
+classoption: a4paper
+fontsize: 11pt
+geometry: margin=1in
+params:
+  n: NA
+---
+
+```{r LoadData, include=FALSE}
+
+# Dont display code
+knitr::opts_chunk$set(echo = FALSE, tidy = TRUE, tidy.opts=list(width.cutoff=60), comment = ">")
+
+# Filter the data for the turbine of interest
+REPD <- read.csv("https://raw.githubusercontent.com/mikey-harper/ShinyApps/master/WindTurbineMapUK/TurbineAllData.csv", stringsAsFactors = FALSE)
+
+TurbineData <- REPD[REPD$Ref.ID == params$n,]
+```
+
+This report provides a detailed breakdown of Wind Turbine planning application number **`r TurbineData$Planning.Application.Reference`**. The site location is:
+
+- **Address**:   `r TurbineData$Address`
+- **County**:    `r TurbineData$County`
+- **Post Code**: `r TurbineData$Post.Code`
+- **Region**:    `r TurbineData$Region`
+- **Country**    `r TurbineData$Country`
+
+# Planning Information
+
+```{r}
+
+TurbineFiltered <- as.data.frame(t(TurbineData))
+names(TurbineFiltered) <- c("Value")
+
+# Only put variables with values into table
+knitr::kable(na.omit(TurbineFiltered), caption = "Full Site Information")
+```
+
+**Values with data missing**:
+
+`r names(TurbineData[,is.na(TurbineData)])`
+
+# Site Location
+
+The maps show the location of the wind turbine site:
+
+```{r, fig.cap="Regional Maps", message=FALSE, warning=FALSE, out.width="100%", fig.pos='!h'}
+library(ggmap)
+library(gridExtra) # For arraning results side by side
+# devtools::install_github('oswaldosantos/ggsn')
+# library(ggsn)
+
+# National Zoom Map
+maptile1 <- get_map(location = "Great Britain", zoom=5)
+
+map1 <- ggmap(maptile1) +
+  geom_point(aes(x = lon, y = lat), data = TurbineData, alpha = .5) +
+  theme_nothing() +
+  ggtitle("National")
+
+# Regional Zoom Map
+maptile2 <- get_map(location = c(TurbineData$lon, TurbineData$lat), zoom = 10)
+
+map2 <- ggmap(maptile2) +
+  geom_point(aes(x = lon, y = lat), data = TurbineData, alpha = .5) +
+  theme_nothing()
+
+# Local Map
+maptile3 <- get_map(location = c(TurbineData$lon, TurbineData$lat), zoom = 12)
+
+map3 <- ggmap(maptile3) +
+  geom_point(aes(x = lon, y = lat), data = TurbineData, alpha = .5) +
+  theme_nothing()
+
+# Local Satellite
+
+maptile4 <- get_map(location = c(TurbineData$lon, TurbineData$lat), zoom = 12, maptype = "satellite", source = "google")
+
+map4 <- ggmap(maptile4) +
+  geom_point(aes(x = lon, y = lat), data = TurbineData, alpha = .5) +
+  theme_nothing()
+
+grid.arrange(map1, map2, nrow = 1)
+```
+
+```{r fig.cap="Local Maps", message=FALSE, warning=FALSE, out.width="100%", fig.pos='!h'}
+
+grid.arrange(map3, map4, nrow = 1)
+
+```
+
+The following link can be clicked to load the site location within google maps: 
+
+**Link to be added**
+
+## Site Statistics
+
+The following statistics are based on the statistical analysis completed by (Michael Harper)[https://eprints.soton.ac.uk/408181/]: 
+
+## Predicted Success Rates
+
+```{r}
+library(ggplot2)
+
+ggplot(data = TurbineData) + geom_col(aes("Success Chance", Site.Score*100)) +
+  coord_flip() +
+  scale_y_continuous(limits = c(-0, 100))
+
+```
+
+
+## Site Comparison##
+
+**To be added: a comparison of how the compares against the national average**
+
