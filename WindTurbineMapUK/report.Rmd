@@ -12,18 +12,59 @@ params:
   n: NA
 ---
 
-```{r LoadData, include=FALSE}
+This report provides the full data output for a wind turbine planning application within the UK. The location data was used within the analysis *"Identifying key influences for planning acceptance of onshore wind turbines"* and is available to read here: [https://eprints.soton.ac.uk/408181/](https://eprints.soton.ac.uk/408181/)
 
+```{r LoadData, include=FALSE}
 # Dont display code
 knitr::opts_chunk$set(echo = FALSE, tidy = TRUE, tidy.opts=list(width.cutoff=60), comment = ">")
 
-# Filter the data for the turbine of interest
-REPD <- read.csv("https://raw.githubusercontent.com/mikey-harper/ShinyApps/master/WindTurbineMapUK/TurbineAllData.csv", stringsAsFactors = FALSE)
 
-TurbineData <- REPD[REPD$Ref.ID == params$n,]
+REPD <- read.csv("https://raw.githubusercontent.com/mikey-harper/ShinyApps/master/WindTurbineMapUK/data/TurbineAllData.csv", stringsAsFactors = FALSE)
+
+
+knitr::opts_chunk$set(echo = FALSE, tidy = TRUE, tidy.opts=list(width.cutoff=60), comment = ">")
+
+# --- Packages
+
+library(tidyverse)
+library(ggplot2)
+library(reshape2)
+library(knitr)
+
+VariableDisplay <- read.csv("https://raw.githubusercontent.com/mikey-harper/ShinyApps/master/WindTurbineMapUK/data/VariableDisplayNames.csv")
+
+
+# --- Functions
+matchNames <- function(inputNames){
+    # Matches variable names with their full descriptive name. Used when plotting or showing
+    # results in a table
+    #
+    names <- VariableDisplay
+    return(names[match(x = inputNames, table = names$Label, nomatch = ""), 2])
+  }
+
+RenamesColumns <- function(dataframe, dropNA = FALSE){
+  # Checks the row names against the variable full names
+  #
+  ReplacementNames <- matchNames(names(dataframe))
+  names(dataframe) <- ReplacementNames
+  if(dropNA){dataframe <- dataframe[,-c(which(ReplacementNames == ""))]}
+  return(dataframe)
+}
 ```
 
-This report provides a detailed breakdown of Wind Turbine planning application number **`r TurbineData$Planning.Application.Reference`**. The site location is:
+```{r FilterDataset, message=FALSE, warning=FALSE}
+TurbineData <- REPD[REPD$Ref.ID == params$n,]
+Turbines_Proximity <- TurbineData[, 46:64] %>% RenamesColumns() %>% melt()
+Turbines_Political <- TurbineData[, 79:82] %>% RenamesColumns() %>% melt()
+
+
+
+```
+
+This report provides a detailed breakdown of Wind Turbine planning application number **`r TurbineData$Planning.Application.Reference`**. 
+
+# Basic Details of Site
 
 - **Address**:   `r TurbineData$Address`
 - **County**:    `r TurbineData$County`
@@ -31,30 +72,41 @@ This report provides a detailed breakdown of Wind Turbine planning application n
 - **Region**:    `r TurbineData$Region`
 - **Country**    `r TurbineData$Country`
 
-# Planning Information
+**Planning Status**:  `r TurbineData$Development.Status`
 
-```{r}
+# Project Size
 
-TurbineFiltered <- as.data.frame(t(TurbineData))
-names(TurbineFiltered) <- c("Value")
+The planning permission was for **`r TurbineData$Capacity`MW** with a total of **`r TurbineData$No..of.Turbines`** wind turbines. The last time the record was updated was on **`r TurbineData$Record.Last.Updated..dd.mm.yyyy.`**.
+ 
+# Site Proximity
 
-# Only put variables with values into table
-knitr::kable(na.omit(TurbineFiltered), caption = "Full Site Information")
+Figure 1 highlights the proximity of the site to the nearest faeatures which have beeen indicated as potentially influential within the acceptance rates of wind turbines.
+
+```{r ProximityPlot, fig.cap="Proximity of site to features", fig.asp=0.4}
+Turbines_Proximity <- Turbines_Proximity[order(Turbines_Proximity$value), ]
+
+ggplot(data = Turbines_Proximity, aes(reorder(variable, value, FUN = median) , value)) +
+  geom_bar(stat="identity", 
+           aes(fill = reorder(variable, value, FUN = median)),
+           col = "black", size = 0.2) +
+  scale_fill_discrete(grDevices::cm.colors(n = 20)) +
+  theme(legend.position = "none") +
+  labs(x="", y = "Distance (km)") +
+  coord_flip()
 ```
-
-**Values with data missing**:
-
-`r names(TurbineData[,is.na(TurbineData)])`
 
 # Site Location
 
-The maps show the location of the wind turbine site:
+Figure 2 maps show the location of the wind turbine site.
 
-```{r, fig.cap="Regional Maps", message=FALSE, warning=FALSE, out.width="100%", fig.pos='!h'}
+```{r SiteLocations, fig.cap="Regional Maps", message=FALSE, warning=FALSE, out.width="100%", fig.pos='!h'}
+
 library(ggmap)
-library(gridExtra) # For arraning results side by side
+library(gridExtra) # For arranging results side by side
 # devtools::install_github('oswaldosantos/ggsn')
 # library(ggsn)
+
+margin <- theme(plot.margin = unit(c(0.2,0.2,0.2,0.2), "cm"))
 
 # National Zoom Map
 maptile1 <- get_map(location = "Great Britain", zoom=5)
@@ -62,60 +114,25 @@ maptile1 <- get_map(location = "Great Britain", zoom=5)
 map1 <- ggmap(maptile1) +
   geom_point(aes(x = lon, y = lat), data = TurbineData, alpha = .5) +
   theme_nothing() +
-  ggtitle("National")
-
-# Regional Zoom Map
-maptile2 <- get_map(location = c(TurbineData$lon, TurbineData$lat), zoom = 10)
-
-map2 <- ggmap(maptile2) +
-  geom_point(aes(x = lon, y = lat), data = TurbineData, alpha = .5) +
-  theme_nothing()
+  ggtitle("National") +
+  margin
 
 # Local Map
 maptile3 <- get_map(location = c(TurbineData$lon, TurbineData$lat), zoom = 12)
 
 map3 <- ggmap(maptile3) +
   geom_point(aes(x = lon, y = lat), data = TurbineData, alpha = .5) +
-  theme_nothing()
+  theme_nothing() +
+  margin
 
-# Local Satellite
-
-maptile4 <- get_map(location = c(TurbineData$lon, TurbineData$lat), zoom = 12, maptype = "satellite", source = "google")
-
-map4 <- ggmap(maptile4) +
-  geom_point(aes(x = lon, y = lat), data = TurbineData, alpha = .5) +
-  theme_nothing()
-
-grid.arrange(map1, map2, nrow = 1)
-```
-
-```{r fig.cap="Local Maps", message=FALSE, warning=FALSE, out.width="100%", fig.pos='!h'}
-
-grid.arrange(map3, map4, nrow = 1)
-
-```
-
-The following link can be clicked to load the site location within google maps: 
-
-**Link to be added**
-
-## Site Statistics
-
-The following statistics are based on the statistical analysis completed by (Michael Harper)[https://eprints.soton.ac.uk/408181/]: 
-
-## Predicted Success Rates
-
-```{r}
-library(ggplot2)
-
-ggplot(data = TurbineData) + geom_col(aes("Success Chance", Site.Score*100)) +
-  coord_flip() +
-  scale_y_continuous(limits = c(-0, 100))
+grid.arrange(map1, map3, nrow = 1)
 
 ```
 
 
-## Site Comparison##
+# Features to add
 
-**To be added: a comparison of how the compares against the national average**
-
+- How does the site compare to other projects?
+- Build a graph of the planning status dates within GraphViz
+- Add a breakdown of the political and demographic data
+- More graphs to represent trends

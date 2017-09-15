@@ -10,6 +10,19 @@ library(ggplot2)
 library(shinydashboard)
 
 
+VariableDisplay <- read.csv("https://raw.githubusercontent.com/mikey-harper/ShinyApps/master/WindTurbineMapUK/data/VariableDisplayNames.csv")
+
+
+# --- Functions
+matchNames <- function(inputNames){
+  # Matches variable names with their full descriptive name. Used when plotting or showing
+  # results in a table
+  #
+  names <- VariableDisplay
+  return(names[match(x = inputNames, table = names$Label, nomatch = ""), 2])
+}
+
+
 # Load Data
 REPD <- read.csv("https://raw.githubusercontent.com/mikey-harper/ShinyApps/master/WindTurbineMapUK/TurbineAllData.csv", stringsAsFactors = FALSE)
 
@@ -26,7 +39,7 @@ sidebar <- dashboardSidebar(
   
   tags$hr (),
   tags$h3 (" Data Filters"),
-  checkboxGroupInput("status", "Planning Stats", c(unique(REPD$Status.Summary)), selected = c(unique(REPD$Status.Summary))),
+  checkboxGroupInput("status", "Planning Status", c(unique(REPD$Status.Summary)), selected = c(unique(REPD$Status.Summary))),
   sliderInput(inputId = "year", label = "Year of Planning", min = 1990, max = 2017, step = 1, value = c(1900,2017), sep = "", dragRange = TRUE),
   sliderInput(inputId = "capacity", label = "Wind Farm Capacity (MW)", min = min(REPD$Capacity), max = max(REPD$Capacity), step = 1, 
               value = c(min(REPD$Capacity),max(REPD$Capacity)), sep = "", dragRange = TRUE),
@@ -63,7 +76,7 @@ Panel2 <- tabPanel("Data",
 
 # Analysis Panel                 
 Panel3 <- tabPanel("Analysis",
-                   fluidRow("To be added"
+                   fluidRow(box("To be added")
                    )
                    
 )
@@ -184,7 +197,9 @@ server <- function(input, output){
                       row.names = NULL)
       
       # Filters to only show complete values
-      completeValues <- b[(complete.cases(b) & !is.na(b$Value) & b$Value != ""),]
+      b$Parameter <- matchNames(b$Parameter)
+      completeValues <- b[b$Parameter != "",]
+      
       
       return(completeValues)
     },  options = list(dom = 't', width = '100%', pageLength = 200))

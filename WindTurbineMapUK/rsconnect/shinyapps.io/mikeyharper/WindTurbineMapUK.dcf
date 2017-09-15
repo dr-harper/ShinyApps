@@ -1,12 +1,10 @@
 name: windturbinemap
 title: WindTurbineMap
-username:
 account: mikeyharper
 server: shinyapps.io
-hostUrl: https://api.shinyapps.io/v1
 appId: 188527
-bundleId: 983156
+bundleId: 982505
 url: https://mikeyharper.shinyapps.io/windturbinemap/
-when: 1505477719.5463
+when: 1505433996.38905
 asMultiple: FALSE
 asStatic: FALSE
