@@ -1,0 +1,105 @@
+Label,Variable Name
+Turbine_ID,Turbine ID
+Status.Summary,Status Summary
+X.coordinate,X Coordinate
+Y.coordinate,Y Coordinate
+Old.Ref.ID,Old Reference ID
+Ref.ID,Reference ID
+Record.Last.Updated..dd.mm.yyyy.,Record Last Updated
+Operator..or.Applicant.,Operator / Applicant
+Site.Name,Site Name
+Capacity,Capacity
+RO.Banding..ROC.MWh.,RO Banding
+FiT.Tariff..p.kWh.,FIT Tariff
+CfD.Capacity..MW.,CfD Capacity
+Turbine.Capacity..MW.,Turbine Capacity MW
+No..of.Turbines,Number of Turbines
+Height.of.Turbines..m.,Height of Turbines
+Development.Status,Development Status
+Development.Status..short.,Development Status Short
+Address,Address
+County,Country
+Region,Region
+Country,Country
+Post.Code,Post Code
+Planning.Authority,Planning Authority
+Planning.Application.Reference,
+Appeal.Reference,
+Secretary.of.State.Reference,
+Type.of.Secretary.of.State.Intervention,
+Judicial.Review,
+Planning.Application.Submitted,
+Planning.Application.Withdrawn,
+Planning.Permission.Refused,
+Appeal.Lodged,
+Appeal.Withdrawn,
+Appeal.Refused,
+Appeal.Granted,
+Planning.Permission.Granted,
+Secretary.of.State...Intervened,
+Secretary.of.State...Refusal,
+Secretary.of.State...Granted,
+Planning.Permission.Expired,
+Under.Construction,
+Operational,
+Size,Site Size
+year,Year
+Airports,Distance to Airports
+AONB,Distance to AONB
+ARoads,Distance to A Roads
+BRoads,Distance to B Roads
+HCoast,Distance to Heritage Coast
+HVpowerline,Distance to HV Powerlines
+MilitarySites,Distance to Military Sites
+MinRoads,Distance to Minor Roads
+Motorways,Distance to Motorways
+NationalParks,Distance to National Park
+NNR,Distance to NNR
+Powerlines,Distance to Powerlines
+PrimaryRoads,Distnace to Primary Roads
+Railway,Distance to Railways
+RAMSAR,Distance to Ramsar
+SACS,Distance to SACS
+SPA,Distance to Natura 2000
+SSSI,Distance to SSSI
+UrbanRegions,Distance to  Urban Region
+Slope,Site Slope
+UKElevation,Elevation
+WindSpeed45,Wind Speed
+Authority,
+Code,
+Type,
+Council_size,
+Con,
+Lab,
+LD,
+Other,
+SNP_PC,
+Control,
+Majority,
+Con_share,"Political, Conservative Share"
+Lab_share,"Political, Labour Share"
+LD_share,"Political, Liberal Democrat"
+Oth_share,"Political, Other"
+SNP_PC_share,"Political, SNP Share"
+AgeTotal,
+AgeMean,Mean Age 
+AgeMedian,
+QualTotal,
+QualLevel4,
+QualPercL4,"Qualifications, L4"
+SocGrdTot,
+SocGrdAB,Social Grade AB
+TenureTotal,
+TenureOwned,Home Ownership
+PercOwn,House Ownership
+Planning_Status_Code,
+(Intercept),Intercept
+lon,
+lat,
+yearCategory,
+CensusMerged,LSOA
+PoliticalMerged,Political Area
+Authority,
+Council_si,
+SNP_PC_sha,"Political, SNP Share"
