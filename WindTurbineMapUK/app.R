@@ -9,6 +9,7 @@ library(plyr)
 library(ggplot2)
 library(shinydashboard)
 
+
 # Load Data
 REPD <- read.csv("https://raw.githubusercontent.com/mikey-harper/ShinyApps/master/WindTurbineMapUK/TurbineAllData.csv", stringsAsFactors = FALSE)
 
@@ -34,9 +35,9 @@ sidebar <- dashboardSidebar(
   selectizeInput("RefID", "Search by Ref ID", choices = unique(REPD$Ref.ID), selected = NULL, multiple = TRUE, options = list(create = TRUE)),
   tags$h3 (" Display Settings"),
   selectInput(inputId = "markerdisplay", label = "Variable to Display",
-              choices = c("Planning Status" = "Status.Summary", "Capacity", "Turbine Capacity" = "Turbine.Capacity..MW", "Total Capacity" = "Capacity",
+              choices = c("Planning Status" = "Status.Summary", "Capacity", "Turbine Capacity" = "Turbine.Capacity..MW.", "Total Capacity" = "Capacity",
                           "Number of Turbines" = "No..of.Turbines", "Turbine Height" = "Height.of.Turbines..m.", "Development Status" = "Development.Status",
-                          "Year" = "year"), selected = "Planning Status"),
+                          "Year" = "Year"), selected = "Planning Status"),
   sliderInput("markersize", "Select Marker Size", 1, 10, 5, step = 0.5),
   
   tags$hr ()
@@ -62,29 +63,13 @@ Panel2 <- tabPanel("Data",
 
 # Analysis Panel                 
 Panel3 <- tabPanel("Analysis",
-                   fluidRow(
+                   fluidRow("To be added"
                    )
                    
 )
 
-# About                 
-Panel4 <- tabPanel("About Research",
-                   fluidRow(
-                     column(width = 12,
-                            box(title="About this Project", width = 12, status = "primary",
-                                tags$body("Project Description"),
-                                tags$h3("Supporting Research"),
-                                tags$body("A conference paper based on the underlying analysis will be presented at ECOS 2017. The conference paper 'Identifying key influences for planning acceptance of onshore wind turbines' is available online.),
-                                          There is a global drive to develop renewable energy power generation to reduce environmental impacts and enhance energy security especially through indigenous resources. Wind energy conversion both on and offshore is one of the most effective technologies to provide sustainable power. In the deployments of such technologies, geographical information systems are extensively used to identify suitable sites for the installation of wind turbines. However, there are concerns that such approaches fail to model site suitability accurately, and in particular fail to account for the difficulties faced in gaining planning permission. This study has explored whether the planning success of proposed wind turbine projects can be predicted using a range of geospatial parameters based on Great Britain as a case study. Logistic regression is used to assess the relationship between appropriate variables and planning outcome. The results indicate that the size of the project, percentage of the local population with high levels of qualifications, the average age, and local political composition emerge as key influences affecting planning approval. To the authors' knowledge, this is the first study which has quantitatively linked regional social and political data to the planning outcome of wind turbines. These findings can help reduce the level of planning issues encountered for proposed wind turbine, improving the accuracy of GIS modelling of wind turbines."),
-                                tags$link("https://eprints.soton.ac.uk/408181/")
-                                )
-                     )
-                     )
-                   )
-
-
 body <- dashboardBody(
-  tabsetPanel(Panel1, Panel2, Panel3, Panel4)
+  tabsetPanel(Panel1, Panel2, Panel3)
 )
 
 ui <- dashboardPage(header, sidebar, body)
@@ -113,16 +98,16 @@ server <- function(input, output){
   
   # Create Basemap
   map <- leaflet(REPD) %>%
-    addProviderTiles(providers$Esri.WorldStreetMap, group = "Map") %>%
+    addTiles() %>%
     addProviderTiles(providers$Esri.WorldImagery, options = providerTileOptions(noWrap = TRUE), group = "Imagery") %>%
     addProviderTiles(providers$Stamen.TonerLite, options = providerTileOptions(noWrap = TRUE), group = "Basic") %>%
-    addLayersControl(baseGroups = c("Map", "Imagery", "Basic"), options = layersControlOptions(collapsed = FALSE))
+    addLayersControl(baseGroups = c("Map", "Basic"), options = layersControlOptions(collapsed = FALSE))
   
   # Update Map when filter is changed
   output$lmap <- renderLeaflet(map)
   
   # --- Plots Points
-  
+
   observe({
     if(nrow(inputTable())==0) {leafletProxy("lmap") %>% clearShapes()}
     else{
@@ -150,16 +135,16 @@ server <- function(input, output){
       }
       if(class(DisplayVariable)=="character" & length(unique(DisplayVariable)) > 2){
         domainValues <- unique(DisplayVariable)
-        pallete <- RColorBrewer::brewer.pal(length(domainValues), "Set3")
+        pallete <- RColorBrewer::brewer.pal(length(domainValues), "Set2")
         pal <- colorFactor(pallete, domainValues,  na.color = "#808080")
       }
-      if(is.numeric(DisplayVariable)){
-        DisplayVariable2 <- DisplayVariable[!is.na(DisplayVariable)]
-        Low <- min(as.numeric(DisplayVariable2))
-        High <- max(as.numeric(DisplayVariable2))
+      if(is.numeric(DisplayVariable)| is.integer(DisplayVariable)){
+        Low <- min(as.numeric(DisplayVariable), na.rm = TRUE)
+        High <- max(as.numeric(DisplayVariable), na.rm = TRUE)
         domainValues <- round(Low - 0.5):round(High - 0.5)
-        pal <- colorNumeric(c("white", "blue"), domainValues,  na.color = "#808080")
+        pal <- colorNumeric(c("red", "green"), domainValues,  na.color = "#808080")
       }
+      else{pal <- colorFactor(pallete, unique(DisplayVariable),  na.color = "#808080")}
       
       
       # Add points to map based on filtered data
@@ -271,21 +256,20 @@ server <- function(input, output){
   
     output$sidebar <- renderUI({
       column(width = 4,
-             box(title="Detailed Survey Results", width = 12, status = "primary", collapsible = TRUE, collapsed = TRUE,
+             box(title="About this Work", width = 12, status = "warning",
+                 tags$body('This dashboard presents part of the analysis of wind turbine acceptance rates in the UK by Michael Harper. Read the research paper here: '),
+                 tags$a("Link to Paper", href="https://eprints.soton.ac.uk/408181/")),
+             box(title="Detailed Survey Results", width = 12, status = "primary", collapsible = TRUE, collapsed = FALSE,
                  wellPanel(id = "tPanel",style = "overflow-y:scroll; height: 300px; max-height: 100%",
                            dataTableOutput("PointResult"))
              ),
-             box(title="Predicted Probabilities", width = 12, status = "primary", collapsible = TRUE,
-                 tags$body("These values show the results of the statistical analysis conducted to assess acceptance rates: https://eprints.soton.ac.uk/408181/"),
-                 textOutput("Acceptability"),
-                 dataTableOutput("PredictedProbability")
-             ),
-             box(title="Export Results", width = 12, status = "primary", collapsible = TRUE, collapsed = TRUE,
+             box(title="Export Results", width = 12, status = "primary", collapsible = TRUE, collapsed = FALSE,
                  tags$body("Generate a Detailed PDF report on a particular site"),
                  selectizeInput("TurbineRef", "Search by Ref ID", choices = unique(REPD$Ref.ID), selected = NULL, multiple = FALSE, options = list(create = TRUE)),
                  downloadButton("report", "Download a Detailed Report"),
-                 tags$body("Note: this takes about 30 seconds to run. Depending on your browser, it may open a new window")
-                 )
+                 tags$br(),
+                 tags$h5("Note: this takes about 30 seconds to run. Depending on your browser, it may open a new window")
+             )
              )
       })
   })
